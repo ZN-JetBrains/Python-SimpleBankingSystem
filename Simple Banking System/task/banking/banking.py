@@ -1,8 +1,9 @@
 import random
-# 16 digit long card number
+
+# 16 digits long card number
 # 1-6: IIN must be 400_000 (first six digits)
 # 7-15: Account number: unique (9 digits)
-# 16: Check digit or checksum, anything atm
+# 16: Check digit or checksum
 
 
 def print_main_menu():
@@ -18,10 +19,20 @@ def print_bank_menu():
 
 
 def generate_card_number():
-    card_num = "400000"
-    card_num += generate_account_number()
-    card_num += get_check_digit()
-    return card_num
+    """
+    :return: 16 chars long digit of digits
+    """
+
+    card_num_string = "400000"                        # 6 digits long
+    card_num_string += generate_account_number()      # 15-digits long
+
+    # Generate check number from current card numbers
+    card_numbers = [int(x) for x in card_num_string]
+    processed_nums = process_numbers(card_numbers)
+    check_number = get_check_digit(processed_nums)
+
+    card_num_string += str(check_number)              # 16 digits long
+    return card_num_string
 
 
 def generate_account_number():
@@ -31,9 +42,35 @@ def generate_account_number():
     return account_number
 
 
-def get_check_digit():
-    # Will use Luhn's algorithm later
-    check_digit = str(random.randint(1, 9))
+def process_numbers(numbers):
+    """
+    Luhn's algorithm
+    1. Drop the last digit
+    2. Multiply odd digits by 2
+    3. Subtract numbers over 9 by 9
+    4. Add all numbers
+    5. Modulus 10
+
+    Result: if 0, return true, otherwise return false
+    """
+
+    # Not necessary when auto generating
+    # numbers.pop()
+
+    for i in range(0, len(numbers), 2):
+        numbers[i] *= 2
+    numbers = [x - 9 if x > 9 else x for x in numbers]
+    return numbers
+
+
+def get_check_digit(card_nums):
+    num_sum = sum(card_nums)
+
+    check_digit = 0
+    while True:
+        if (num_sum + check_digit) % 10 == 0:
+            break
+        check_digit += 1
     return check_digit
 
 
@@ -75,6 +112,7 @@ while is_running:
         print(card_number)
         print("Your card PIN:")
         print(card_pin)
+        print()
     elif user_input == 2:
         print("Enter your card number:")
         user_card = input()
