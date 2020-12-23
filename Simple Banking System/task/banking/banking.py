@@ -1,4 +1,57 @@
 import random
+import sqlite3
+
+
+class DatabaseManager:
+
+    def __init__(self):
+        self.db_name = "./card.s3db"
+        try:
+            self.conn = sqlite3.connect(self.db_name)
+            self.cursor = self.conn.cursor()
+        except sqlite3.OperationalError as errorMsg:
+            print(errorMsg)
+
+    def setup_table(self):
+        """Creates a table if it does not exist"""
+        self.cursor.execute("DROP TABLE IF EXISTS card")
+        self.conn.commit()
+
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS card
+         (id INTEGER PRIMARY KEY AUTOINCREMENT,
+          number TEXT,
+          pin TEXT,
+          balance INTEGER DEFAULT 0)""")
+        self.conn.commit()
+
+    def insert_new_data(self, a_number, a_pin):
+        """Inserts a row into the table card"""
+        # id_ = len(self.cursor.fetchall()) + 1
+        data = (a_number, a_pin, 0)
+
+        self.cursor.execute("INSERT INTO card (number, pin, balance) VALUES (?,?,?)", data)
+        self.conn.commit()
+
+    def get_balance(self, a_number, a_pin):
+        """Gets the balance if"""
+        data = (a_number, a_pin)
+        balance = 0
+
+        try:
+            self.cursor.execute("SELECT balance FROM card WHERE number=? AND pin=?", data)
+            balance = self.cursor.fetchone()
+        except Exception as e:
+            print("No such account.")
+        return balance
+
+    def display_all_data(self):
+        for row in self.cursor.execute("SELECT * FROM card"):
+            print(row)
+
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
+
 
 # 16 digits long card number
 # 1-6: IIN must be 400_000 (first six digits)
@@ -44,7 +97,7 @@ def generate_account_number():
 
 def process_numbers(numbers):
     """
-    Luhn's algorithm
+    Luhn algorithm
     1. Drop the last digit
     2. Multiply odd digits by 2
     3. Subtract numbers over 9 by 9
@@ -93,6 +146,10 @@ def login(card_num, pin):
             return True
 
 
+# Program entry point
+bank_db = DatabaseManager()
+bank_db.setup_table()
+
 card_number = None
 card_pin = None
 
@@ -113,6 +170,7 @@ while is_running:
         print("Your card PIN:")
         print(card_pin)
         print()
+        bank_db.insert_new_data(card_number, card_pin)
     elif user_input == 2:
         print("Enter your card number:")
         user_card = input()
@@ -123,3 +181,6 @@ while is_running:
             is_running = login(card_number, card_pin)
         else:
             print("\nWrong card number or PIN!")
+
+
+bank_db.close()
