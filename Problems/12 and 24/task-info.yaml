@@ -1,0 +1,14 @@
+type: code
+files:
+- name: main.py
+  visible: true
+  text: |-
+    from datetime import datetime
+
+
+    def format_time(datetime_obj):
+        ...
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/9820#comment
+status: Unchecked
+record: -1
